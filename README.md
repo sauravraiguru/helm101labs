@@ -1,6 +1,6 @@
 # Why Helm?
 
-[Helm](https://docs.helm.sh/) is often described as the Kubernetes application package manager. So, what does Helm give you over using kubectl directly? 
+[Helm](https://docs.helm.sh/) is often described as the Kubernetes application package manager. So, what does Helm give you over using kubectl directly?
 
 # Objectives
 
@@ -15,12 +15,52 @@ This lab provide an insight on the advantages of using Helm over using Kubernete
 # Prerequisites
 
 * Have a running Kubernetes cluster. See the [IBM Cloud Kubernetes Service](https://cloud.ibm.com/docs/containers/cs_tutorials.html#cs_cluster_tutorial) or [Kubernetes Getting Started Guide](https://kubernetes.io/docs/setup/) for details about creating a cluster.
-* Have Helm installed and initialized with the Kubernetes cluster. See [Installing Helm on IBM Cloud Kubernetes Service](Lab0/README.md) or the [Helm Quickstart Guide](https://docs.helm.sh/using_helm/#quickstart) for getting started with Helm.
+* Have Helm installed and initialized with the Kubernetes cluster. See [Installing Helm on IBM Cloud Kubernetes Service](Lab0/README.md) or the [Helm Instalation Guide](https://helm.sh/docs/using_helm/#installing-helm) for getting started with Helm.
 
-### Login to IBM Cloud, Install dependencies
+### Installing Helm
+
+For Mac using Homebrew
+```
+brew install kubernetes-helm
 
 ```
-$ ibmcloud login -r us-south
+For Linux using snap
+```
+sudo snap install helm --classic
+
+```
+For Windows
+```
+choco install kubernetes-helm
+```
+OR
+
+```
+scoop install helm
+
+```
+
+### Installing IBM Cloud CLI
+We are going to install the IBM Cloud CLI, to work with our Kubernetes cluster.
+For Mac or Linux
+```
+curl -sL https://ibm.biz/idt-installer | bash
+
+```
+For Windows [In Windows Powershell, Run as administrator]
+```
+[Net.ServicePointManager]::SecurityProtocol = "Tls12"; iex(New-Object Net.WebClient).DownloadString('https://ibm.biz/idt-win-installer')
+
+```
+For more details see the below link. [IBM Cloud CLI Instalation](https://cloud.ibm.com/docs/cli?topic=cloud-cli-getting-started)
+
+### Login to IBM Cloud, Install dependencies
+We will find the details in the Kubernetes 'mycluster' page.
+1. https://cloud.ibm.com/kubernetes/clusters
+2. Click on 'mycluster' -> 'Access'
+
+```
+$ ibmcloud login -a cloud.ibm.com -r us-south -g default
 
 $ ibmcloud target --cf
 
@@ -33,15 +73,42 @@ $ ibmcloud cr namespace-list
 $ docker login
 
 $ ibmcloud cs cluster-config --cluster <cluster name>
+
+example: ibmcloud ks cluster-config --cluster mycluster
+
 ```
+As per the command provided in the clusters 'Access' page.
 
 Set the KUBECONFIG environment variable. Copy the output from the previous command and paste it in your terminal. The command output looks similar to the following example:
 
 export KUBECONFIG=/Users/$USER/.bluemix/plugins/container-service/clusters/mybluechatter/kube-config-hou02-mybluechatter.yml
 
+Check the cluster information
+```
+kubectl cluster-info
+```
+```
+You should see like this below
+Kubernetes master is running at https://c5.dal12.containers.cloud.ibm.com:29371
+CoreDNS is running at https://c5.dal12.containers.cloud.ibm.com:29371/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+kubernetes-dashboard is running at https://c5.dal12.containers.cloud.ibm.com:29371/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy
+Metrics-server is running at https://c5.dal12.containers.cloud.ibm.com:29371/api/v1/namespaces/kube-system/services/https:metrics-server:/proxy
+```
 ```
 $ helm init
+```
+Output:
+```
+$HELM_HOME has been configured at /Users/sauravraiguru/.helm.
+Tiller (the Helm server-side component) has been installed into your Kubernetes Cluster.
+```
+```
 $ helm version
+```
+Output:
+```
+Client: &version.Version{SemVer:"v2.14.1", GitCommit:"5270352a09c7e8b6e8c9593002a73535276507c0", GitTreeState:"clean"}
+Server: &version.Version{SemVer:"v2.14.1", GitCommit:"5270352a09c7e8b6e8c9593002a73535276507c0", GitTreeState:"clean"}
 ```
 
 
@@ -64,24 +131,24 @@ Let's go ahead and install the chart now.
     $ cd helm101/charts
     $ helm install ./guestbook/ --name guestbook-demo --namespace helm-demo
     ```
-    
+
     Note: `$ helm install` command will create the `helm-demo` namespace if it does not exist.
-    
+
     You should see output similar to the following:
-    
+
     ```console
     NAME:   guestbook-demo
     LAST DEPLOYED: Fri Sep 21 14:26:01 2018
     NAMESPACE: helm-demo
     STATUS: DEPLOYED
-    
+
     RESOURCES:
     ==> v1/Service
     NAME            AGE
     guestbook-demo  0s
     redis-master    0s
     redis-slave     0s
-    
+
     ==> v1/Deployment
     guestbook-demo  0s
     redis-master    0s
@@ -99,23 +166,29 @@ Let's go ahead and install the chart now.
     1. Get the application URL by running these commands:
       NOTE: It may take a few minutes for the LoadBalancer IP to be available.
             You can watch the status of by running 'kubectl get svc -w guestbook-demo --namespace helm-demo'
+    ```
+    Check the deployed application -
+    ```
       export SERVICE_IP=$(kubectl get svc --namespace helm-demo guestbook-demo -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
       echo http://$SERVICE_IP:3000
     ```
-    
+
     The chart install performs the Kubernetes deployments and service creations of the redis master and slaves, and the guestbook app, as one. This is because the chart is a collection of files that describe a related set of Kubernetes resources and Helm manages the creation of these resources via the Kubernetes API.    
-    
-    To check the deployment, you can use `$ kubectl get deployment guestbook-demo --namespace helm-demo`.
-    
-    You should see output similar to the following:
-    
-    ```console
-    NAME             DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
-    guestbook-demo   2         2         2            2           51m
+
+    To check the deployment, you can use
+
+    `$ kubectl get deployments -n helm-demo`.
+
+    ```NAME             READY   UP-TO-DATE   AVAILABLE   AGE
+    guestbook-demo   2/2     2            2           4m32s
+    redis-master     1/1     1            1           4m32s
+    redis-slave      2/2     2            2           4m32s
     ```
-    
-    To check the status of the running application, you can use `$ kubectl get pods --namespace helm-demo`.
-    
+
+    To check the status of the running application, you can use
+
+    `$ kubectl get pods --namespace helm-demo`.
+
     ```console
     NAME                            READY     STATUS    RESTARTS   AGE
     guestbook-demo-6c9cf8b9-jwbs9   1/1       Running   0          52m
@@ -124,21 +197,21 @@ Let's go ahead and install the chart now.
     redis-slave-586b4c847c-2xt99    1/1       Running   0          52m
     redis-slave-586b4c847c-q7rq5    1/1       Running   0          52m
     ```
-   
+
     To check the services, you can run `$ kubectl get services --namespace helm-demo`.
-    
+
     ```console
     NAME             TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
     guestbook-demo   LoadBalancer   172.21.43.244    <pending>     3000:31367/TCP   50m
     redis-master     ClusterIP      172.21.12.43     <none>        6379/TCP         50m
     redis-slave      ClusterIP      172.21.176.148   <none>        6379/TCP         50m
     ```
-    
+
 3. View the guestbook:
 
    You can now play with the guestbook that you just created by opening it in a browser (it might take a few moments for the guestbook to come up).
     1. To view the guestbook on a remote host, locate the external IP and the port of the load balancer by following the "NOTES" section in the install output. The commands will be similar to the following:
-    
+
        ```console
        $ export SERVICE_IP=$(kubectl get svc --namespace helm-demo guestbook-demo -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
        $ echo http://$SERVICE_IP:331367
@@ -146,17 +219,17 @@ Let's go ahead and install the chart now.
        ```
 
        In this scenario the URL is `http://50.23.5.136:31367`.
-       
+
        Note: If no external IP is assigned, then you can get the external IP with the following command:
 
        ```console
        $ kubectl get nodes -o wide
-       NAME           STATUS    ROLES     AGE       VERSION        EXTERNAL-IP      OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME  
-       10.47.122.98   Ready     <none>    1h        v1.10.11+IKS   173.193.92.112   Ubuntu 16.04.5 LTS   4.4.0-141-generic   docker://18.6.1
-       ```
+       NAME            STATUS   ROLES    AGE   VERSION       INTERNAL-IP     EXTERNAL-IP      OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
+       10.77.159.106   Ready    <none>   73m   v1.13.9+IKS   10.77.159.106   184.172.247.45   Ubuntu 16.04.6 LTS   4.4.0-159-generic   containerd://1.2.7
+      ```
 
-       In this scenario the URL is `http://173.193.92.112:31838`.
- 
+       In this scenario the URL is `http://184.172.247.45:31367`.
+
     2. Navigate to the output given (for example `http://50.23.5.136:31367`) in your browser. You should see the guestbook now displaying in your browser.
 
 ![Guestbook](https://github.com/IBM/helm101/blob/master/tutorial/images/guestbook-page.png)
@@ -167,7 +240,7 @@ Move on to the next lab below to learn how to update our running app when the ch
 
 # Lab 2. I need to change but want none of the hassle!
 
-In Lab 1, we installed the guestbook sample app by using Helm and saw the benefits over using `kubectl`. You probably think that you're done and know enough to use Helm. But what about updates or improvements to the chart? How do you update your running app to pick up these changes? 
+In Lab 1, we installed the guestbook sample app by using Helm and saw the benefits over using `kubectl`. You probably think that you're done and know enough to use Helm. But what about updates or improvements to the chart? How do you update your running app to pick up these changes?
 
 In this lab, we're going to look at how to update our running app when the chart has been changed. To demonstrate this, we're going to make changes to the original `guestbook` chart by:
 * Removing the Redis slaves and using just the in-membory DB
@@ -180,64 +253,64 @@ We'll update the previously deployed `guestbook-demo` application by using Helm.
 1. Update the application:
 
     ```$ helm upgrade guestbook-demo ./guestbook --set redis.slaveEnabled=false,service.type=NodePort --namespace helm-demo```
-    
+
     A Helm upgrade takes an existing release and upgrades it according to the information you provide. You should see output similar to the following:
-    
+
     ```console
     Release "guestbook-demo" has been upgraded. Happy Helming!
     LAST DEPLOYED: Mon Sep 24 10:36:18 2018
     NAMESPACE: helm-demo
     STATUS: DEPLOYED
-    
+
     RESOURCES:
     ==> v1/Service
     NAME            AGE
     guestbook-demo  1h
     redis-master    1h
-    
+
     ==> v1/Deployment
     guestbook-demo  1h
     redis-master    1h
-    
+
     ==> v1/Pod(related)
-    
+
     NAME                           READY  STATUS   RESTARTS  AGE
     guestbook-demo-6c9cf8b9-dhqk9  1/1    Running  0         1h
     guestbook-demo-6c9cf8b9-zddn2  1/1    Running  0         1h
     redis-master-5d8b66464f-g7sh6  1/1    Running  0         1h
-    
-    
+
+
     NOTES:
     1. Get the application URL by running these commands:
       export NODE_PORT=$(kubectl get --namespace helm-demo -o jsonpath="{.spec.ports[0].nodePort}" services guestbook-demo)
       export NODE_IP=$(kubectl get nodes --namespace helm-demo -o jsonpath="{.items[0].status.addresses[0].address}")
       echo http://$NODE_IP:$NODE_PORT
     ```
-    
+
     The `upgrade` command upgrades the app to a specified version of a chart, removes the `redis-slave` resources, and updates the app `service.type` to `NodePort`.
-        
+
     To check the updates, you can run ```$ kubectl get all --namespace helm-demo```
-    
+
     ```console
     NAME                                READY     STATUS    RESTARTS   AGE
     pod/guestbook-demo-6c9cf8b9-dhqk9   1/1       Running   0          1h
     pod/guestbook-demo-6c9cf8b9-zddn2   1/1       Running   0          1h
     pod/redis-master-5d8b66464f-g7sh6   1/1       Running   0          1h
-    
+
     NAME                     TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
     service/guestbook-demo   NodePort    172.21.43.244   <none>        3000:31202/TCP   1h
     service/redis-master     ClusterIP   172.21.12.43    <none>        6379/TCP         1h
-    
+
     NAME                             DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
     deployment.apps/guestbook-demo   2         2         2            2           1h
     deployment.apps/redis-master     1         1         1            1           1h
-    
+
     NAME                                      DESIRED   CURRENT   READY     AGE
     replicaset.apps/guestbook-demo-6c9cf8b9   2         2         2         1h
     replicaset.apps/redis-master-5d8b66464f   1         1         1         1h
     ```
     Note: The service type has changed (to `NodePort`) and a new port has been allocated (`31202` in this output case) to the guestbook service. All `redis-slave` resources have been removed.
-    
+
 2. View the guestbook using the updated port for the guestbook service.
 
    ```console
@@ -260,42 +333,52 @@ With Helm, every time an install, upgrade, or rollback happens, the revision num
 
 Let's see how this works in practice.
 
-1. Check the number of deployments:
+1. Check the number of helm deployments and their revisions:
+  ```console
+  $ helm list
+  ```
+  You should see below output
+  ```console
+  NAME          	REVISION	UPDATED                 	STATUS  	CHART          	APP VERSION	NAMESPACE
+  guestbook-demo	1       	Tue Aug 20 13:27:19 2019	DEPLOYED	guestbook-0.2.0	           	helm-demo
+  ```
+
+2. Check the number of deployments:
 
     ```console
     $ helm history guestbook-demo
     ```
-    
+
     You should see output similar to the following because we did an upgrade in [Lab 2](../Lab2/README.md) after the initial install in [Lab 1](../Lab1/README.md):
-    
+
     ```console
     REVISION	UPDATED                 	STATUS    	CHART          	DESCRIPTION
     1       	Mon Sep 24 08:54:04 2018	SUPERSEDED	guestbook-0.1.0	Install complete
     2       	Mon Sep 24 10:36:18 2018	DEPLOYED  	guestbook-0.1.0	Upgrade complete
     ```
-        
-2. Roll back to the previous revision:
+
+3. Roll back to the previous revision:
 
     In this rollback, Helm checks the changes that occured when upgrading from the revision 1 to revision 2. This information enables it to makes the calls to the Kubernetes API server, to update the deployed application as per the initial deployment - in other words with Redis slaves and using a load balancer.
 
     Rollback with this command, ```$ helm rollback guestbook-demo 1```
-    
+
     ```console
     Rollback was a success! Happy Helming!
     ```
     Check the history again, `$ helm history guestbook-demo`
-    
+
     You should see output similar to the following:
-    
+
     ```console
     REVISION	UPDATED                 	STATUS    	CHART          	DESCRIPTION     
     1       	Mon Sep 24 08:54:04 2018	SUPERSEDED	guestbook-0.1.0	Install complete
     2       	Mon Sep 24 10:36:18 2018	SUPERSEDED	guestbook-0.1.0	Upgrade complete
     3       	Mon Sep 24 11:59:18 2018	DEPLOYED  	guestbook-0.1.0	Rollback to 1
     ```
-    
+
     To check the rollback, you can run `$ kubectl get all --namespace helm-demo`:
-    
+
     ```console
     NAME                                READY     STATUS    RESTARTS   AGE
     pod/guestbook-demo-6c9cf8b9-dhqk9   1/1       Running   0          3h
@@ -303,24 +386,24 @@ Let's see how this works in practice.
     pod/redis-master-5d8b66464f-g7sh6   1/1       Running   0          3h
     pod/redis-slave-586b4c847c-tkfj5    1/1       Running   0          2m
     pod/redis-slave-586b4c847c-xxrdn    1/1       Running   0          2m
-    
+
     NAME                     TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
     service/guestbook-demo   LoadBalancer   172.21.43.244   <pending>     3000:31202/TCP   3h
     service/redis-master     ClusterIP      172.21.12.43    <none>        6379/TCP         3h
     service/redis-slave      ClusterIP      172.21.232.16   <none>        6379/TCP         2m
-    
+
     NAME                             DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
     deployment.apps/guestbook-demo   2         2         2            2           3h
     deployment.apps/redis-master     1         1         1            1           3h
     deployment.apps/redis-slave      2         2         2            2           2m
-    
+
     NAME                                      DESIRED   CURRENT   READY     AGE
     replicaset.apps/guestbook-demo-6c9cf8b9   2         2         2         3h
     replicaset.apps/redis-master-5d8b66464f   1         1         1         3h
     replicaset.apps/redis-slave-586b4c847c    2         2         2         2m
     ```
-   
-    You can see from the output that the app service is the service type of `LoadBalancer` again and the Redis master/slave deployment has returned. 
-    This shows a complete rollback from the upgrade in Lab 2 
+
+    You can see from the output that the app service is the service type of `LoadBalancer` again and the Redis master/slave deployment has returned.
+    This shows a complete rollback from the upgrade in Lab 2
 
 From this lab, we can say that Helm does revision management well and Kubernetes does not have the capability built in! You might be wondering why we need `helm rollback` when you could just re-run the `helm upgrade` from a previous version. And that's a good question. Technically, you should end up with the same resources (with same parameters) deployed. However, the advantage of using `helm rollback` is that helm manages (ie. remembers) all of the variations/parameters of the previous `helm install\upgrade` for you. Doing the rollback via a `helm upgrade` requires you (and your entire team) to manually track how the command was previously executed. That's not only tedious but very error prone. It is much easier, safer and reliable to let Helm manage all of that for you and all you need to do it tell it which previous version to go back to, and it does the rest.
