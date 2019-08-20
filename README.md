@@ -223,8 +223,8 @@ Let's go ahead and install the chart now.
        NAME            STATUS   ROLES    AGE   VERSION       INTERNAL-IP     EXTERNAL-IP      OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
        10.77.159.106   Ready    <none>   73m   v1.13.9+IKS   10.77.159.106   184.172.247.45   Ubuntu 16.04.6 LTS   4.4.0-159-generic   containerd://1.2.7
       ```
-
-       In this scenario the URL is `http://184.172.247.45:31367`.
+      
+      In this scenario the URL is `http://184.172.247.45:31367`.
 
     2. Navigate to the output given (for example `http://50.23.5.136:31367`) in your browser. You should see the guestbook now displaying in your browser.
 
