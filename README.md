@@ -64,10 +64,6 @@ $ ibmcloud login -a cloud.ibm.com -r us-south -g default
 
 $ ibmcloud target --cf
 
-$ ibmcloud cr login
-
-$ ibmcloud cr namespace-add <add-name>
-
 $ ibmcloud cr namespace-list
 
 $ docker login
@@ -84,8 +80,8 @@ Set the KUBECONFIG environment variable. Copy the output from the previous comma
 export KUBECONFIG=/Users/$USER/.bluemix/plugins/container-service/clusters/mybluechatter/kube-config-hou02-mybluechatter.yml
 
 Check the cluster information
-```
-kubectl cluster-info
+```console
+$ kubectl cluster-info
 ```
 ```
 You should see like this below
@@ -94,7 +90,7 @@ CoreDNS is running at https://c5.dal12.containers.cloud.ibm.com:29371/api/v1/nam
 kubernetes-dashboard is running at https://c5.dal12.containers.cloud.ibm.com:29371/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy
 Metrics-server is running at https://c5.dal12.containers.cloud.ibm.com:29371/api/v1/namespaces/kube-system/services/https:metrics-server:/proxy
 ```
-```
+```console
 $ helm init
 ```
 Output:
@@ -102,7 +98,7 @@ Output:
 $HELM_HOME has been configured at /Users/sauravraiguru/.helm.
 Tiller (the Helm server-side component) has been installed into your Kubernetes Cluster.
 ```
-```
+```console
 $ helm version
 ```
 Output:
