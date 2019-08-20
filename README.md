@@ -7,10 +7,10 @@
 This lab provide an insight on the advantages of using Helm over using Kubernetes directly through `kubectl`. When you complete all the labs, you'll:
 * Understand the core concepts of Helm
 * Understand the advantages of deployment using Helm over Kubernetes directly, looking at:
-  * Application management
+  * Application deployment
   * Updates
   * Configuration
-  * Revision management
+  * Revision management and Rollback
 
 # Prerequisites
 
